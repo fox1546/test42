@@ -9,6 +9,32 @@
 #define new DEBUG_NEW
 #endif
 
+class CAboutDlg : public CDialogEx
+{
+public:
+    CAboutDlg() noexcept;
+
+    enum { IDD = IDD_ABOUTBOX };
+
+protected:
+    virtual void DoDataExchange(CDataExchange* pDX);
+
+protected:
+    DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() noexcept : CDialogEx(IDD_ABOUTBOX)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+    CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
 CTcpTestDlg::CTcpTestDlg(CWnd* pParent /*=nullptr*/)
     : CDialogEx(IDD_TCPTEST_DIALOG, pParent)
     , m_listenSocket(INVALID_SOCKET)

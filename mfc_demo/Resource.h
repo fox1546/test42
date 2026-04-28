@@ -29,6 +29,9 @@
 #define IDC_BTN_CLEAR_LOG		1013
 #define IDC_STATIC_STATUS		1014
 
+#define IDM_ABOUTBOX            0x0010
+#define IDS_ABOUTBOX            101
+
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 
