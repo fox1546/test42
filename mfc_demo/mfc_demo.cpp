@@ -1,4 +1,5 @@
 ﻿#include "framework.h"
+#include "mfc_demo.h"
 #include "TcpTestDlg.h"
 
 #ifdef _DEBUG
@@ -6,7 +7,6 @@
 #endif
 
 BEGIN_MESSAGE_MAP(CTcpTestApp, CWinApp)
-    ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 CTcpTestApp::CTcpTestApp()

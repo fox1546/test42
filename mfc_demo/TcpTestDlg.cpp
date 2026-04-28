@@ -1,6 +1,9 @@
 #include "framework.h"
 #include "TcpTestDlg.h"
+#include "Resource.h"
 #include "afxdialogex.h"
+#include <sstream>
+#include <iomanip>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -132,18 +135,18 @@ void CTcpTestDlg::InitSocket()
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
-        Log(_T("WSAStartup 失败"));
+        Log(_T("WSAStartup failed"));
         return;
     }
 
     if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2)
     {
-        Log(_T("Winsock 版本不支持"));
+        Log(_T("Winsock version not supported"));
         WSACleanup();
         return;
     }
 
-    Log(_T("Winsock 初始化成功"));
+    Log(_T("Winsock initialized successfully"));
 }
 
 void CTcpTestDlg::CleanupSocket()
@@ -175,14 +178,14 @@ void CTcpTestDlg::CleanupSocket()
     }
 
     WSACleanup();
-    Log(_T("Winsock 清理完成"));
+    Log(_T("Winsock cleanup completed"));
 }
 
 void CTcpTestDlg::OnBnClickedBtnListen()
 {
     if (m_bListening)
     {
-        Log(_T("正在停止监听..."));
+        Log(_T("Stopping listening..."));
         m_bRunning = FALSE;
         
         if (m_listenSocket != INVALID_SOCKET)
@@ -198,7 +201,7 @@ void CTcpTestDlg::OnBnClickedBtnListen()
 
         m_bListening = FALSE;
         m_mode = MODE_NONE;
-        Log(_T("监听已停止"));
+        Log(_T("Listening stopped"));
         UpdateUIState();
         return;
     }
@@ -209,14 +212,14 @@ void CTcpTestDlg::OnBnClickedBtnListen()
 
     if (nPort <= 0 || nPort > 65535)
     {
-        Log(_T("请输入有效的端口号 (1-65535)"));
+        Log(_T("Please enter a valid port (1-65535)"));
         return;
     }
 
     m_listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (m_listenSocket == INVALID_SOCKET)
     {
-        Log(_T("创建监听套接字失败"));
+        Log(_T("Failed to create listen socket"));
         return;
     }
 
@@ -227,7 +230,7 @@ void CTcpTestDlg::OnBnClickedBtnListen()
 
     if (bind(m_listenSocket, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR)
     {
-        Log(_T("绑定端口失败"));
+        Log(_T("Failed to bind port"));
         closesocket(m_listenSocket);
         m_listenSocket = INVALID_SOCKET;
         return;
@@ -235,7 +238,7 @@ void CTcpTestDlg::OnBnClickedBtnListen()
 
     if (listen(m_listenSocket, SOMAXCONN) == SOCKET_ERROR)
     {
-        Log(_T("监听失败"));
+        Log(_T("Listen failed"));
         closesocket(m_listenSocket);
         m_listenSocket = INVALID_SOCKET;
         return;
@@ -246,7 +249,7 @@ void CTcpTestDlg::OnBnClickedBtnListen()
     m_bRunning = TRUE;
 
     CString logMsg;
-    logMsg.Format(_T("开始监听端口: %d"), nPort);
+    logMsg.Format(_T("Listening on port: %d"), nPort);
     Log(logMsg);
 
     m_acceptThread = std::thread(&CTcpTestDlg::AcceptThreadProc, this);
@@ -270,7 +273,7 @@ void CTcpTestDlg::AcceptThreadProc()
         {
             if (m_bRunning)
             {
-                Log(_T("select 错误"));
+                Log(_T("select error"));
             }
             break;
         }
@@ -296,7 +299,7 @@ void CTcpTestDlg::AcceptThreadProc()
                 CString clientIP = CString(inet_ntoa(clientAddr.sin_addr));
                 int clientPort = ntohs(clientAddr.sin_port);
                 CString logMsg;
-                logMsg.Format(_T("客户端连接: %s:%d"), clientIP, clientPort);
+                logMsg.Format(_T("Client connected: %s:%d"), clientIP, clientPort);
                 Log(logMsg);
 
                 if (m_receiveThread.joinable())
@@ -326,20 +329,20 @@ void CTcpTestDlg::OnBnClickedBtnConnect()
 
     if (strIP.IsEmpty())
     {
-        Log(_T("请输入IP地址"));
+        Log(_T("Please enter IP address"));
         return;
     }
 
     if (nPort <= 0 || nPort > 65535)
     {
-        Log(_T("请输入有效的端口号 (1-65535)"));
+        Log(_T("Please enter a valid port (1-65535)"));
         return;
     }
 
     m_connectedSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (m_connectedSocket == INVALID_SOCKET)
     {
-        Log(_T("创建套接字失败"));
+        Log(_T("Failed to create socket"));
         return;
     }
 
@@ -349,19 +352,19 @@ void CTcpTestDlg::OnBnClickedBtnConnect()
 
     if (inet_pton(AF_INET, CT2A(strIP), &serverAddr.sin_addr) <= 0)
     {
-        Log(_T("IP地址格式错误"));
+        Log(_T("Invalid IP address format"));
         closesocket(m_connectedSocket);
         m_connectedSocket = INVALID_SOCKET;
         return;
     }
 
     CString logMsg;
-    logMsg.Format(_T("正在连接 %s:%d..."), strIP, nPort);
+    logMsg.Format(_T("Connecting to %s:%d..."), strIP, nPort);
     Log(logMsg);
 
     if (connect(m_connectedSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
     {
-        Log(_T("连接失败"));
+        Log(_T("Connection failed"));
         closesocket(m_connectedSocket);
         m_connectedSocket = INVALID_SOCKET;
         return;
@@ -371,7 +374,7 @@ void CTcpTestDlg::OnBnClickedBtnConnect()
     m_mode = MODE_CLIENT;
     m_bRunning = TRUE;
 
-    logMsg.Format(_T("已连接到 %s:%d"), strIP, nPort);
+    logMsg.Format(_T("Connected to %s:%d"), strIP, nPort);
     Log(logMsg);
 
     m_receiveThread = std::thread(&CTcpTestDlg::ReceiveThreadProc, this);
@@ -398,7 +401,7 @@ void CTcpTestDlg::ReceiveThreadProc()
         {
             if (m_bRunning)
             {
-                Log(_T("接收数据时发生错误"));
+                Log(_T("Error receiving data"));
             }
             break;
         }
@@ -413,7 +416,7 @@ void CTcpTestDlg::ReceiveThreadProc()
                 CString displayData = FormatReceiveData(data);
 
                 CString logMsg;
-                logMsg.Format(_T("收到数据, 长度: %d 字节"), bytesReceived);
+                logMsg.Format(_T("Received data, length: %d bytes"), bytesReceived);
                 Log(logMsg);
 
                 m_editReceive.SetSel(-1, -1);
@@ -421,14 +424,14 @@ void CTcpTestDlg::ReceiveThreadProc()
             }
             else if (bytesReceived == 0)
             {
-                Log(_T("连接已关闭"));
+                Log(_T("Connection closed"));
                 break;
             }
             else
             {
                 if (WSAGetLastError() != WSAEWOULDBLOCK)
                 {
-                    Log(_T("接收数据失败"));
+                    Log(_T("Failed to receive data"));
                     break;
                 }
             }
@@ -447,7 +450,7 @@ void CTcpTestDlg::ReceiveThreadProc()
 
 void CTcpTestDlg::OnBnClickedBtnDisconnect()
 {
-    Log(_T("正在断开连接..."));
+    Log(_T("Disconnecting..."));
     m_bRunning = FALSE;
 
     if (m_receiveThread.joinable())
@@ -464,7 +467,7 @@ void CTcpTestDlg::OnBnClickedBtnDisconnect()
 
     m_bConnected = FALSE;
     m_mode = MODE_NONE;
-    Log(_T("已断开连接"));
+    Log(_T("Disconnected"));
     UpdateUIState();
 }
 
@@ -472,7 +475,7 @@ void CTcpTestDlg::OnBnClickedBtnSend()
 {
     if (!m_bConnected)
     {
-        Log(_T("没有连接"));
+        Log(_T("No connection"));
         return;
     }
 
@@ -481,7 +484,7 @@ void CTcpTestDlg::OnBnClickedBtnSend()
 
     if (strSend.IsEmpty())
     {
-        Log(_T("请输入要发送的数据"));
+        Log(_T("Please enter data to send"));
         return;
     }
 
@@ -497,14 +500,14 @@ void CTcpTestDlg::OnBnClickedBtnSend()
         sendData = HexStringToBytes(strSend);
         if (sendData.empty() && !strSend.IsEmpty())
         {
-            Log(_T("十六进制格式错误"));
+            Log(_T("Invalid hex format"));
             return;
         }
     }
 
     if (sendData.empty())
     {
-        Log(_T("没有数据要发送"));
+        Log(_T("No data to send"));
         return;
     }
 
@@ -512,12 +515,12 @@ void CTcpTestDlg::OnBnClickedBtnSend()
 
     if (bytesSent == SOCKET_ERROR)
     {
-        Log(_T("发送失败"));
+        Log(_T("Send failed"));
         return;
     }
 
     CString logMsg;
-    logMsg.Format(_T("已发送 %d 字节"), bytesSent);
+    logMsg.Format(_T("Sent %d bytes"), bytesSent);
     Log(logMsg);
 }
 
@@ -556,18 +559,18 @@ void CTcpTestDlg::UpdateUIState()
 {
     if (m_bListening)
     {
-        m_btnListen.SetWindowText(_T("停止监听"));
+        m_btnListen.SetWindowText(_T("Stop Listening"));
         m_editPort.EnableWindow(FALSE);
     }
     else
     {
-        m_btnListen.SetWindowText(_T("监听"));
+        m_btnListen.SetWindowText(_T("Listen"));
         m_editPort.EnableWindow(TRUE);
     }
 
     if (m_bConnected)
     {
-        m_btnConnect.SetWindowText(_T("断开"));
+        m_btnConnect.SetWindowText(_T("Disconnect"));
         m_editIP.EnableWindow(FALSE);
         m_editRemotePort.EnableWindow(FALSE);
         m_btnListen.EnableWindow(FALSE);
@@ -576,7 +579,7 @@ void CTcpTestDlg::UpdateUIState()
     }
     else
     {
-        m_btnConnect.SetWindowText(_T("连接"));
+        m_btnConnect.SetWindowText(_T("Connect"));
         m_editIP.EnableWindow(TRUE);
         m_editRemotePort.EnableWindow(TRUE);
         m_btnListen.EnableWindow(!m_bListening);
@@ -586,11 +589,11 @@ void CTcpTestDlg::UpdateUIState()
 
     if (m_bListening || m_bConnected)
     {
-        m_staticStatus.SetWindowText(_T("状态: 已连接"));
+        m_staticStatus.SetWindowText(_T("Status: Connected"));
     }
     else
     {
-        m_staticStatus.SetWindowText(_T("状态: 未连接"));
+        m_staticStatus.SetWindowText(_T("Status: Disconnected"));
     }
 }
 
